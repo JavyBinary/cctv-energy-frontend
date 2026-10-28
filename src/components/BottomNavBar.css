@@ -1,0 +1,75 @@
+.bottom-nav-bar {
+  width: 390px;
+  height: 70px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  left: 0;
+  bottom: 0;
+  position: absolute;
+  background: #2B2B2B;
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.nav-tab-item {
+  text-decoration: none;
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.nav-tab-item:active:not(.disabled) {
+  transform: scale(0.95);
+}
+
+.nav-tab-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+}
+
+.nav-tab-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.nav-tab-item.inactive .nav-tab-title {
+  color: #ffffff;
+}
+
+.nav-tab-item.inactive svg path,
+.nav-tab-item.inactive svg circle {
+  stroke: #ffffff;
+}
+
+.nav-tab-item.active .nav-tab-title {
+  color: #D71820;
+}
+
+.nav-tab-item.active svg path,
+.nav-tab-item.active svg circle {
+  stroke: #D71820;
+}
+
+.nav-tab-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

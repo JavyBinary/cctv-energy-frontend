@@ -1,0 +1,112 @@
+.catalog-filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.catalog-filter-label {
+  color: #6B7280;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.catalog-filter-label output {
+  font-weight: inherit;
+  color: inherit;
+}
+
+.catalog-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.catalog-filter-range-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.catalog-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(to right, #D71820 0%, #D71820 var(--progress, 100%), #EAEAEA var(--progress, 100%), #EAEAEA 100%);
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+  border: none;
+}
+
+.catalog-range-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  border-radius: 12px;
+  border: none;
+}
+
+.catalog-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #D71820;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  margin-top: 0;
+}
+
+.catalog-range-slider::-moz-range-track {
+  width: 100%;
+  height: 24px;
+  background: #EAEAEA;
+  border-radius: 12px;
+  border: none;
+}
+
+.catalog-range-slider::-moz-range-progress {
+  background: #D71820;
+  height: 24px;
+  border-radius: 12px 0 0 12px;
+}
+
+.catalog-range-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #D71820;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.catalog-search-button {
+  height: 38px;
+  padding: 0 20px;
+  background: #D71820;
+  border: none;
+  border-radius: 19px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.catalog-search-button:active {
+  transform: scale(0.96);
+}
+
+.catalog-search-button:hover {
+  background: #b5141b;
+}

@@ -1,0 +1,126 @@
+.camera-card {
+  text-decoration: none;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #EAEAEA;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #000000;
+  box-sizing: border-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.camera-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.camera-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.camera-thumbnail {
+  width: 100%;
+  height: 110px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #ffffff;
+  display: block;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.camera-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: #000000;
+  padding: 0 4px;
+  line-height: 1.25;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.camera-card-specs {
+  align-self: stretch;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.camera-card-power {
+  font-size: 15px;
+  font-weight: 700;
+  color: #D71820;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.camera-card-resolution {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.camera-card-likes {
+  align-self: stretch;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+  margin-top: 0;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.camera-card-delete-form {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.camera-card-delete-btn {
+  width: 100%;
+  height: 34px;
+  border-radius: 17px;
+  background: #D71820;
+  color: #ffffff;
+  border: none;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.camera-card-delete-btn:hover {
+  background: #b5141b;
+}
+
+.camera-card-delete-btn:active {
+  transform: scale(0.96);
+}
