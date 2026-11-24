@@ -12,6 +12,8 @@ const publicDir = path.join(appDir, 'public');
 const expectedFiles = [
   'DefaultImage.jpg',
   'DefaultVideo.mp4',
+  'logo192.png',
+  'logo512.png',
   'camera_1.jpg',
   'camera_2.jpg',
   'camera_3.jpg',
@@ -85,9 +87,15 @@ for (const cf of componentFiles) {
   console.log(`  ✓ ${cf}`);
 }
 
-console.log('\n--- 4. Testing Build Artifacts ---');
+console.log('\n--- 4. Testing Build Artifacts & PWA ---');
 const distHtml = path.join(appDir, 'dist', 'index.html');
 assert(fs.existsSync(distHtml), 'dist/index.html must exist after build');
 console.log('  ✓ dist/index.html verified');
+
+const distManifest = path.join(appDir, 'dist', 'manifest.webmanifest');
+const distSw = path.join(appDir, 'dist', 'sw.js');
+assert(fs.existsSync(distManifest), 'dist/manifest.webmanifest must exist after build');
+assert(fs.existsSync(distSw), 'dist/sw.js must exist after build');
+console.log('  ✓ PWA manifest.webmanifest and sw.js verified');
 
 console.log('\nAll automated mock and architecture tests passed successfully!');

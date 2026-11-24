@@ -1,9 +1,12 @@
 .login-page {
-  width: 390px;
-  height: 100%;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: 100%;
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   padding: 28px 20px;
   box-sizing: border-box;
   font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

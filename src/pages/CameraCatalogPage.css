@@ -1,18 +1,20 @@
 .camera-catalog-page {
-  width: 390px;
-  height: 844px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100%;
   position: relative;
   background-color: #ffffff;
-  overflow: hidden;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .catalog-header {
-  width: 390px;
-  padding: 20px 16px 12px 16px;
-  position: absolute;
+  width: 100%;
+  padding: 16px 16px 12px 16px;
+  position: sticky;
   top: 0;
-  left: 0;
   background: #ffffff;
   display: flex;
   flex-direction: column;
@@ -31,17 +33,17 @@
   font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Адаптивная сетка карточек:
+   <360px: 1 колонка
+   360px-575px: 2 колонки
+   576px-991px: 3 колонки
+   >=992px: 4 колонки */
 .catalog-grid-scroll {
-  position: absolute;
-  top: 126px;
-  left: 0;
-  width: 390px;
-  height: 648px;
+  width: 100%;
+  flex: 1;
   padding: 12px 16px 24px 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   align-content: start;
   grid-auto-rows: auto;
@@ -49,7 +51,7 @@
 }
 
 .catalog-empty-state {
-  grid-column: span 2;
+  grid-column: 1 / -1;
   text-align: center;
   padding: 40px 16px;
   color: #6B7280;
@@ -75,4 +77,54 @@
 
 .btn-reset-empty:hover {
   background-color: #b5141b;
+}
+
+@media (max-width: 359px) {
+  .catalog-grid-scroll {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px 12px 20px 12px;
+  }
+}
+
+@media (min-width: 576px) {
+  .catalog-header {
+    padding: 20px 24px 14px 24px;
+  }
+
+  .catalog-title {
+    font-size: 22px;
+  }
+
+  .catalog-grid-scroll {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px 24px 32px 24px;
+  }
+}
+
+@media (min-width: 992px) {
+  .camera-catalog-page {
+    border-left: 1px solid #EAEAEA;
+    border-right: 1px solid #EAEAEA;
+  }
+
+  .catalog-header {
+    padding: 22px 32px 16px 32px;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .catalog-title {
+    font-size: 24px;
+    white-space: nowrap;
+  }
+
+  .catalog-grid-scroll {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    padding: 20px 32px 40px 32px;
+  }
 }

@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:https": "VITE_HTTPS=true vite",
     "build": "tsc && vite build",
+    "build:pages": "VITE_MOCK_ONLY=true VITE_BASE_PATH=/cctv-energy-frontend/ npm run build && cp dist/index.html dist/404.html",
+    "predeploy": "npm run build:pages",
+    "deploy": "gh-pages -d dist",
     "preview": "vite preview",
     "test": "node scripts/test_mock.js",
     "generate-api": "node scripts/generate-api.mjs"
@@ -24,8 +28,11 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "gh-pages": "^6.3.0",
     "swagger-typescript-api": "^13.15.0",
     "typescript": "^5.5.3",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "vite-plugin-mkcert": "^2.1.0",
+    "vite-plugin-pwa": "^2.0.0"
   }
 }

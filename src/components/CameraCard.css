@@ -12,6 +12,8 @@
   box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .camera-card:hover {
@@ -54,6 +56,8 @@
   justify-content: center;
   width: 100%;
   box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 

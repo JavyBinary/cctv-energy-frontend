@@ -1,7 +1,10 @@
 import { CameraModel } from './types';
 
-export const DEFAULT_IMAGE = '/DefaultImage.jpg';
-export const DEFAULT_VIDEO = '/DefaultVideo.mp4';
+const BASE = (import.meta.env?.BASE_URL || '/').replace(/\/$/, '');
+const withBase = (path: string) => (path.startsWith('/') ? `${BASE}${path}` : path);
+
+export const DEFAULT_IMAGE = withBase('/DefaultImage.jpg');
+export const DEFAULT_VIDEO = withBase('/DefaultVideo.mp4');
 
 export const CAMERAS_MOCK: CameraModel[] = [
   {
@@ -12,8 +15,8 @@ export const CAMERAS_MOCK: CameraModel[] = [
     resolution: 'Full HD',
     is_outdoor: true,
     status: 'published',
-    image_url: '/camera_1.jpg',
-    video_url: '/video_1.mp4',
+    image_url: withBase('/camera_1.jpg'),
+    video_url: withBase('/video_1.mp4'),
     likes_count: 5,
     housing_type: 'Цилиндрический',
   },
@@ -25,8 +28,8 @@ export const CAMERAS_MOCK: CameraModel[] = [
     resolution: 'Full HD',
     is_outdoor: false,
     status: 'published',
-    image_url: '/camera_2.jpg',
-    video_url: '/video_2.mp4',
+    image_url: withBase('/camera_2.jpg'),
+    video_url: withBase('/video_2.mp4'),
     likes_count: 2,
     housing_type: 'Купольный',
   },
@@ -38,8 +41,8 @@ export const CAMERAS_MOCK: CameraModel[] = [
     resolution: '2K QHD',
     is_outdoor: false,
     status: 'published',
-    image_url: '/camera_3.jpg',
-    video_url: '/video_3.mp4',
+    image_url: withBase('/camera_3.jpg'),
+    video_url: withBase('/video_3.mp4'),
     likes_count: 3,
     housing_type: 'Корпусный',
   },
@@ -51,8 +54,8 @@ export const CAMERAS_MOCK: CameraModel[] = [
     resolution: 'Super HD',
     is_outdoor: true,
     status: 'published',
-    image_url: '/camera_4.jpg',
-    video_url: '/video_4.mp4',
+    image_url: withBase('/camera_4.jpg'),
+    video_url: withBase('/video_4.mp4'),
     likes_count: 1,
     housing_type: 'Цилиндрический',
   },

@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
+  max-width: 480px;
 }
 
 .catalog-filter-label {
@@ -26,6 +27,7 @@
 
 .catalog-filter-range-wrap {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
@@ -34,6 +36,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
+  min-width: 0;
   height: 24px;
   border-radius: 12px;
   background: linear-gradient(to right, #D71820 0%, #D71820 var(--progress, 100%), #EAEAEA var(--progress, 100%), #EAEAEA 100%);

@@ -7,6 +7,10 @@ import { logout } from './userSlice';
 
 export const DEFAULT_MAX_POWER = 15.0;
 
+const isMockOnlyMode = (): boolean =>
+  import.meta.env.VITE_MOCK_ONLY === 'true' ||
+  (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io'));
+
 export interface CamerasState {
   cameras: CameraModel[];
   feedCamera: CameraModel | null;
@@ -58,6 +62,13 @@ export const fetchCameras = createAsyncThunk<
   async (explicitPower, { getState, rejectWithValue }) => {
     const state = getState() as { cameras: CamerasState; user: { isAuthenticated: boolean } };
     const powerMax = explicitPower !== undefined ? explicitPower : state.cameras.appliedPower;
+    if (isMockOnlyMode()) {
+      return rejectWithValue({
+        isGuest: true,
+        powerMax,
+        message: 'Mock-режим для GitHub Pages',
+      });
+    }
     try {
       const query = powerMax < DEFAULT_MAX_POWER ? { power_max: powerMax } : undefined;
       const response = await api.api.getCamerasApiApiCamerasGet(query);
@@ -80,6 +91,14 @@ export const fetchFeedCamera = createAsyncThunk<
   'cameras/fetchFeedCamera',
   async ({ cameraId, next = false }, { getState, rejectWithValue }) => {
     const state = getState() as { user: { isAuthenticated: boolean } };
+    if (isMockOnlyMode()) {
+      return rejectWithValue({
+        isGuest: true,
+        cameraId,
+        next,
+        message: 'Mock-режим для GitHub Pages',
+      });
+    }
     try {
       const response = await api.api.getCameraFeedApiApiCamerasFeedGet({
         camera_id: cameraId,
