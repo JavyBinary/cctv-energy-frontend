@@ -1,4 +1,6 @@
 import React from 'react';
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
 import './PowerFilter.css';
 
 interface PowerFilterProps {
@@ -23,13 +25,14 @@ export const PowerFilter: React.FC<PowerFilterProps> = ({
 
   return (
     <div className="catalog-filter-controls">
-      <label htmlFor="power_max" className="catalog-filter-label">
+      <Form.Label htmlFor="power_max" bsPrefix="catalog-filter-label">
         Мощность до: <output id="power_val">{currentValue.toFixed(1)}</output> Вт
-      </label>
-      <form onSubmit={handleSubmit} className="catalog-filter-row">
+      </Form.Label>
+      <Form onSubmit={handleSubmit} className="catalog-filter-row">
         <div className="catalog-filter-range-wrap">
-          <input
+          <Form.Control
             type="range"
+            bsPrefix="catalog-range-slider"
             id="power_max"
             name="power_max"
             min={0}
@@ -37,14 +40,13 @@ export const PowerFilter: React.FC<PowerFilterProps> = ({
             step={0.1}
             value={currentValue}
             style={{ '--progress': `${progressPct}%` } as React.CSSProperties}
-            className="catalog-range-slider"
             onChange={(e) => onChange(parseFloat(e.target.value))}
           />
         </div>
-        <button type="submit" className="catalog-search-button">
+        <Button type="submit" bsPrefix="catalog-search-button">
           Найти
-        </button>
-      </form>
+        </Button>
+      </Form>
     </div>
   );
 };

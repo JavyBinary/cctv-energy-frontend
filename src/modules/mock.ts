@@ -73,7 +73,7 @@ export const CAMERAS_MOCK: CameraModel[] = [
 
 export function getPublishedCameras(powerMax?: number): CameraModel[] {
   let list = CAMERAS_MOCK.filter((c) => c.status === 'published');
-  if (powerMax !== undefined && !isNaN(powerMax) && powerMax > 0) {
+  if (powerMax !== undefined && !isNaN(powerMax) && powerMax >= 0) {
     list = list.filter((c) => c.power <= powerMax);
   }
   return list;

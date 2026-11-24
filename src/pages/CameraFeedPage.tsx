@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Badge from 'react-bootstrap/Badge';
 import { getCameraById, getNextCameraId, getPublishedCameras, DEFAULT_IMAGE, DEFAULT_VIDEO } from '../modules/mock';
 import './CameraFeedPage.css';
 
@@ -65,6 +67,7 @@ export const CameraFeedPage: React.FC = () => {
             key={camera.id}
             className="feed-video-player"
             src={videoSrc}
+            poster={imageSrc}
             autoPlay
             loop
             muted
@@ -92,13 +95,13 @@ export const CameraFeedPage: React.FC = () => {
             {camera.description || 'Нет описания'}
           </span>
           {camera.description && camera.description.length > 30 && (
-            <button
+            <Button
               type="button"
-              className="feed-expand-btn"
+              bsPrefix="feed-expand-btn"
               onClick={() => setExpandedDesc((prev) => !prev)}
             >
               {expandedDesc ? 'Свернуть' : 'Ещё'}
-            </button>
+            </Button>
           )}
         </div>
       </section>
@@ -128,9 +131,9 @@ export const CameraFeedPage: React.FC = () => {
         </div>
 
         {/* 2. Круглая красная кнопка Следующий (#D71820) с белой стрелкой */}
-        <button
+        <Button
           type="button"
-          className="feed-next-button"
+          bsPrefix="feed-next-button"
           onClick={handleNextClick}
           title="Следующая модель камеры"
           aria-label="Следующая модель камеры"
@@ -144,12 +147,12 @@ export const CameraFeedPage: React.FC = () => {
               strokeLinejoin="round"
             />
           </svg>
-        </button>
+        </Button>
 
         {/* 3. Овальные бейджи характеристик */}
         <div className="feed-metrics-badges">
-          <div className="feed-metric-badge">{camera.power.toFixed(1)} Вт</div>
-          <div className="feed-metric-badge">{camera.resolution || 'Full HD'}</div>
+          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">{camera.power.toFixed(1)} Вт</Badge>
+          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">{camera.resolution || 'Full HD'}</Badge>
         </div>
       </aside>
     </div>

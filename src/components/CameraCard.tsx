@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 import { CameraModel } from '../modules/types';
 import { DEFAULT_IMAGE } from '../modules/mock';
 import './CameraCard.css';
@@ -26,7 +28,7 @@ export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelet
   };
 
   return (
-    <div className="camera-card">
+    <Card bsPrefix="camera-card">
       <div
         className="camera-card-link"
         onClick={() => onClick(camera.id)}
@@ -38,14 +40,14 @@ export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelet
           }
         }}
       >
-        <img
+        <Card.Img
+          bsPrefix="camera-thumbnail"
           src={imgSrc}
           alt={camera.model_name}
-          className="camera-thumbnail"
           onError={handleImgError}
           loading="lazy"
         />
-        <div className="camera-card-title">{camera.model_name}</div>
+        <Card.Title bsPrefix="camera-card-title">{camera.model_name}</Card.Title>
         <div className="camera-card-specs">
           <div className="camera-card-power">{camera.power.toFixed(1)} Вт</div>
           <div className="camera-card-resolution">{camera.resolution || '—'}</div>
@@ -64,15 +66,15 @@ export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelet
         </div>
       </div>
       <div className="camera-card-delete-form">
-        <button
+        <Button
           type="button"
-          className="camera-card-delete-btn"
+          bsPrefix="camera-card-delete-btn"
           title="Удалить камеру"
           onClick={handleDelete}
         >
           Удалить
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 };

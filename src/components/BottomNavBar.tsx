@@ -1,5 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Nav from 'react-bootstrap/Nav';
+import Button from 'react-bootstrap/Button';
 import './BottomNavBar.css';
 
 export const BottomNavBar: React.FC = () => {
@@ -10,11 +12,12 @@ export const BottomNavBar: React.FC = () => {
   const isCatalogActive = location.pathname === '/' || location.pathname.startsWith('/catalog');
 
   return (
-    <nav className="bottom-nav-bar" aria-label="Нижняя навигация">
+    <Nav as="nav" bsPrefix="bottom-nav-bar" aria-label="Нижняя навигация">
       {/* 1. Лента (доступна) */}
-      <button
+      <Button
         type="button"
-        className={`nav-tab-item ${isFeedActive ? 'active' : 'inactive'}`}
+        bsPrefix="nav-tab-item"
+        className={isFeedActive ? 'active' : 'inactive'}
         onClick={() => navigate('/feed/1')}
         title="Лента видеокамер"
       >
@@ -29,12 +32,13 @@ export const BottomNavBar: React.FC = () => {
           </svg>
         </div>
         <div className="nav-tab-title">Лента</div>
-      </button>
+      </Button>
 
       {/* 2. Добавление (недоступна в ЛР5) */}
-      <button
+      <Button
         type="button"
-        className="nav-tab-item inactive disabled"
+        bsPrefix="nav-tab-item"
+        className="inactive disabled"
         disabled
         title="Добавление камеры (недоступно в ЛР5)"
       >
@@ -49,12 +53,13 @@ export const BottomNavBar: React.FC = () => {
           </svg>
         </div>
         <div className="nav-tab-title">Добавление</div>
-      </button>
+      </Button>
 
       {/* 3. Плитка (доступна) */}
-      <button
+      <Button
         type="button"
-        className={`nav-tab-item ${isCatalogActive ? 'active' : 'inactive'}`}
+        bsPrefix="nav-tab-item"
+        className={isCatalogActive ? 'active' : 'inactive'}
         onClick={() => navigate('/')}
         title="Плитка каталога"
       >
@@ -69,12 +74,13 @@ export const BottomNavBar: React.FC = () => {
           </svg>
         </div>
         <div className="nav-tab-title">Плитка</div>
-      </button>
+      </Button>
 
       {/* 4. Войти (недоступна в ЛР5) */}
-      <button
+      <Button
         type="button"
-        className="nav-tab-item inactive disabled"
+        bsPrefix="nav-tab-item"
+        className="inactive disabled"
         disabled
         title="Вход в систему (недоступно в ЛР5)"
       >
@@ -90,7 +96,7 @@ export const BottomNavBar: React.FC = () => {
           </svg>
         </div>
         <div className="nav-tab-title">Войти</div>
-      </button>
-    </nav>
+      </Button>
+    </Nav>
   );
 };
