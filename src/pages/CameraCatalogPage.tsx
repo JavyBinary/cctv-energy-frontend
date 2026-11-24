@@ -1,54 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import { CameraCard } from '../components/CameraCard';
 import { PowerFilter } from '../components/PowerFilter';
-import { getPublishedCameras } from '../modules/mock';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  DEFAULT_MAX_POWER,
+  applyPowerFilter,
+  deleteCamera,
+  fetchCameras,
+  resetPowerFilter,
+  setSliderPower,
+} from '../slices/camerasSlice';
 import './CameraCatalogPage.css';
-
-const DEFAULT_MAX_POWER = 15.0;
 
 export const CameraCatalogPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const rawPower = searchParams.get('power');
-  const parsedPower = rawPower !== null ? parseFloat(rawPower) : NaN;
-  const initialPower = Number.isFinite(parsedPower) ? parsedPower : DEFAULT_MAX_POWER;
 
-  const [sliderPower, setSliderPower] = useState<number>(initialPower);
-  const [appliedPower, setAppliedPower] = useState<number>(initialPower);
-  const [deletedIds, setDeletedIds] = useState<number[]>([]);
+  const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
+  const { cameras, sliderPower, appliedPower, loading, actionLoading } = useAppSelector(
+    (state) => state.cameras
+  );
 
   useEffect(() => {
     document.title = 'Каталог камер - Расчет энергопотребления';
-  }, []);
-
-  // Filter cameras by applied power (updated on form submit) and exclude deleted
-  const allPublished = getPublishedCameras(appliedPower);
-  const cameras = allPublished.filter((c) => !deletedIds.includes(c.id));
+    const rawPower = searchParams.get('power');
+    if (rawPower !== null) {
+      const parsed = parseFloat(rawPower);
+      if (Number.isFinite(parsed)) {
+        dispatch(applyPowerFilter(parsed));
+        dispatch(fetchCameras(parsed));
+        return;
+      }
+    }
+    dispatch(fetchCameras());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
   const handleCardClick = (id: number) => {
     navigate(`/feed/${id}`);
   };
 
   const handleDeleteCamera = (id: number) => {
-    setDeletedIds((prev) => [...prev, id]);
+    dispatch(deleteCamera(id));
   };
 
   const handleSearch = () => {
-    setAppliedPower(sliderPower);
+    dispatch(applyPowerFilter(sliderPower));
     if (sliderPower < DEFAULT_MAX_POWER) {
       setSearchParams({ power: sliderPower.toFixed(1) });
     } else {
       setSearchParams({});
     }
+    dispatch(fetchCameras(sliderPower));
   };
 
   const handleResetFilter = () => {
-    setSliderPower(DEFAULT_MAX_POWER);
-    setAppliedPower(DEFAULT_MAX_POWER);
-    setDeletedIds([]);
+    dispatch(resetPowerFilter());
     setSearchParams({});
+    dispatch(fetchCameras(DEFAULT_MAX_POWER));
   };
 
   return (
@@ -59,21 +72,26 @@ export const CameraCatalogPage: React.FC = () => {
           maxPower={DEFAULT_MAX_POWER}
           currentValue={sliderPower}
           onChange={(val) => {
-            setSliderPower(val);
+            dispatch(setSliderPower(val));
           }}
           onSearch={handleSearch}
+          loading={loading || actionLoading}
         />
       </header>
 
-      {/* Сетка плитки: 2 колонки со скроллом */}
       <main className="catalog-grid-scroll">
-        {cameras.length === 0 ? (
+        {loading ? (
+          <div className="catalog-empty-state">
+            <Spinner animation="border" variant="danger" />
+          </div>
+        ) : cameras.length === 0 ? (
           <div className="catalog-empty-state">
             <p>Нет камер с мощностью до {appliedPower.toFixed(1)} Вт</p>
             <Button
               type="button"
               bsPrefix="btn-reset-empty"
               onClick={handleResetFilter}
+              disabled={loading || actionLoading}
             >
               Сбросить фильтр
             </Button>
@@ -85,6 +103,8 @@ export const CameraCatalogPage: React.FC = () => {
               camera={camera}
               onClick={handleCardClick}
               onDelete={handleDeleteCamera}
+              showDelete={isAuthenticated && camera.is_creator === 1}
+              disabled={actionLoading}
             />
           ))
         )}

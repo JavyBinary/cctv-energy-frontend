@@ -2,23 +2,44 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Nav from 'react-bootstrap/Nav';
 import Button from 'react-bootstrap/Button';
+import { authAxios } from '../api';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { logout } from '../slices/userSlice';
+import { DEFAULT_MAX_POWER, fetchCameras } from '../slices/camerasSlice';
 import './BottomNavBar.css';
 
 export const BottomNavBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const { isAuthenticated, username } = useAppSelector((state) => state.user);
 
   const isFeedActive = location.pathname.startsWith('/feed');
+  const isCreateActive = location.pathname.startsWith('/create');
   const isCatalogActive = location.pathname === '/' || location.pathname.startsWith('/catalog');
+  const isLoginActive = location.pathname.startsWith('/login');
+
+  const handleLogout = async () => {
+    try {
+      await authAxios.post('/api/users/logout');
+    } catch {
+      // Даже если бэкенд недоступен, сбрасываем клиентскую сессию
+    } finally {
+      dispatch(logout());
+      navigate('/');
+      dispatch(fetchCameras(DEFAULT_MAX_POWER));
+    }
+  };
 
   return (
     <Nav as="nav" bsPrefix="bottom-nav-bar" aria-label="Нижняя навигация">
-      {/* 1. Лента (доступна) */}
+      {/* 1. Лента (доступна всем) */}
       <Button
         type="button"
         bsPrefix="nav-tab-item"
         className={isFeedActive ? 'active' : 'inactive'}
-        onClick={() => navigate('/feed/1')}
+        onClick={() => navigate('/feed')}
         title="Лента видеокамер"
       >
         <div className="nav-tab-icon">
@@ -34,13 +55,20 @@ export const BottomNavBar: React.FC = () => {
         <div className="nav-tab-title">Лента</div>
       </Button>
 
-      {/* 2. Добавление (недоступна в ЛР5) */}
+      {/* 2. Добавление (доступна только авторизованному пользователю) */}
       <Button
         type="button"
         bsPrefix="nav-tab-item"
-        className="inactive disabled"
-        disabled
-        title="Добавление камеры (недоступно в ЛР5)"
+        className={
+          !isAuthenticated
+            ? 'inactive disabled'
+            : isCreateActive
+            ? 'active'
+            : 'inactive'
+        }
+        disabled={!isAuthenticated}
+        onClick={() => navigate('/create')}
+        title={isAuthenticated ? 'Добавить модель камеры' : 'Доступно после входа'}
       >
         <div className="nav-tab-icon">
           <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -55,7 +83,7 @@ export const BottomNavBar: React.FC = () => {
         <div className="nav-tab-title">Добавление</div>
       </Button>
 
-      {/* 3. Плитка (доступна) */}
+      {/* 3. Плитка (доступна всем) */}
       <Button
         type="button"
         bsPrefix="nav-tab-item"
@@ -76,27 +104,50 @@ export const BottomNavBar: React.FC = () => {
         <div className="nav-tab-title">Плитка</div>
       </Button>
 
-      {/* 4. Войти (недоступна в ЛР5) */}
-      <Button
-        type="button"
-        bsPrefix="nav-tab-item"
-        className="inactive disabled"
-        disabled
-        title="Вход в систему (недоступно в ЛР5)"
-      >
-        <div className="nav-tab-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </div>
-        <div className="nav-tab-title">Войти</div>
-      </Button>
+      {/* 4. Войти (для гостя) / Выход + username (для авторизованного) */}
+      {isAuthenticated ? (
+        <Button
+          type="button"
+          bsPrefix="nav-tab-item"
+          className="inactive"
+          onClick={handleLogout}
+          title={`Выйти (${username})`}
+        >
+          <div className="nav-tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9M16 17L21 12M21 12L16 7M21 12H9"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <div className="nav-tab-title">Выход ({username})</div>
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          bsPrefix="nav-tab-item"
+          className={isLoginActive ? 'active' : 'inactive'}
+          onClick={() => navigate('/login')}
+          title="Вход в систему"
+        >
+          <div className="nav-tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div className="nav-tab-title">Войти</div>
+        </Button>
+      )}
     </Nav>
   );
 };

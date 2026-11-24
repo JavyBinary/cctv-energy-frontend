@@ -8,6 +8,7 @@ interface PowerFilterProps {
   currentValue: number;
   onChange: (val: number) => void;
   onSearch: () => void;
+  loading?: boolean;
 }
 
 export const PowerFilter: React.FC<PowerFilterProps> = ({
@@ -15,6 +16,7 @@ export const PowerFilter: React.FC<PowerFilterProps> = ({
   currentValue,
   onChange,
   onSearch,
+  loading = false,
 }) => {
   const progressPct = maxPower > 0 ? (currentValue / maxPower) * 100 : 100;
 
@@ -43,7 +45,7 @@ export const PowerFilter: React.FC<PowerFilterProps> = ({
             onChange={(e) => onChange(parseFloat(e.target.value))}
           />
         </div>
-        <Button type="submit" bsPrefix="catalog-search-button">
+        <Button type="submit" bsPrefix="catalog-search-button" disabled={loading}>
           Найти
         </Button>
       </Form>

@@ -2,65 +2,90 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Badge from 'react-bootstrap/Badge';
-import { getCameraById, getNextCameraId, getPublishedCameras, DEFAULT_IMAGE, DEFAULT_VIDEO } from '../modules/mock';
+import Spinner from 'react-bootstrap/Spinner';
+import { DEFAULT_IMAGE, DEFAULT_VIDEO } from '../modules/mock';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchFeedCamera, toggleLikeCamera } from '../slices/camerasSlice';
 import './CameraFeedPage.css';
 
 export const CameraFeedPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
+  const { feedCamera: camera, loading, actionLoading } = useAppSelector((state) => state.cameras);
 
   const [expandedDesc, setExpandedDesc] = useState(false);
   const [videoError, setVideoError] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likesOffset, setLikesOffset] = useState(0);
 
-  const published = getPublishedCameras();
-  const defaultId = published.length > 0 ? published[0].id : 1;
-  const currentId = id ? parseInt(id, 10) : defaultId;
-
-  const camera = getCameraById(isNaN(currentId) ? defaultId : currentId) || published[0];
+  const parsedId = id ? parseInt(id, 10) : undefined;
+  const validId = parsedId !== undefined && !Number.isNaN(parsedId) ? parsedId : undefined;
 
   useEffect(() => {
-    // Reset video error and description state on camera change
-    setVideoError(false);
     setExpandedDesc(false);
-    setIsLiked(false);
-    setLikesOffset(0);
+    setVideoError(false);
+    dispatch(fetchFeedCamera({ cameraId: validId, next: false }));
+  }, [validId, dispatch]);
+
+  useEffect(() => {
     if (camera) {
-      document.title = `${camera.model_name} - Лента камер`;
+      document.title = `Лента — ${camera.model_name}`;
     }
-  }, [currentId, camera]);
+  }, [camera]);
 
-  const handleNextClick = () => {
-    if (camera) {
-      const nextId = getNextCameraId(camera.id);
-      navigate(`/feed/${nextId}`);
-    }
-  };
-
-  const handleLikeToggle = () => {
-    setIsLiked((prev) => !prev);
-    setLikesOffset((prev) => (isLiked ? prev - 1 : prev + 1));
-  };
-
-  if (!camera) {
+  if (loading && !camera) {
     return (
-      <div className="feed-not-found">
-        <p>Камера не найдена</p>
-        <button type="button" className="btn-back" onClick={() => navigate('/')}>
-          В каталог
-        </button>
+      <div className="camera-feed-container">
+        <div className="feed-not-found">
+          <Spinner animation="border" variant="light" />
+        </div>
       </div>
     );
   }
 
-  const effectiveLikes = camera.likes_count + likesOffset;
+  if (!camera) {
+    return (
+      <div className="camera-feed-container">
+        <div className="feed-not-found">
+          <p>Камера не найдена</p>
+          <button type="button" onClick={() => navigate('/')} className="btn-back">
+            В каталог
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleNextClick = async () => {
+    if (loading || actionLoading) return;
+    const result = await dispatch(fetchFeedCamera({ cameraId: camera.id, next: true }));
+    if (fetchFeedCamera.fulfilled.match(result) || fetchFeedCamera.rejected.match(result)) {
+      // Переходим по URL при следующем id если он отличается
+      const nextId =
+        fetchFeedCamera.fulfilled.match(result) ? result.payload.id : undefined;
+      if (nextId && nextId !== camera.id) {
+        navigate(`/feed/${nextId}`);
+      }
+    }
+  };
+
+  const handleLikeToggle = () => {
+    if (actionLoading) return;
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    const nextLike = camera.is_liked === 1 ? 0 : 1;
+    dispatch(toggleLikeCamera({ cameraId: camera.id, like: nextLike }));
+  };
+
   const videoSrc = camera.video_url || DEFAULT_VIDEO;
   const imageSrc = camera.image_url || DEFAULT_IMAGE;
+  const isLiked = isAuthenticated && camera.is_liked === 1;
 
   return (
     <div className="camera-feed-container">
-      {/* Медиа-контент: видео или фоллбек-изображение */}
       <div className="feed-video-container">
         {!videoError && videoSrc ? (
           <video
@@ -87,7 +112,6 @@ export const CameraFeedPage: React.FC = () => {
         <div className="feed-gradient-overlay" />
       </div>
 
-      {/* Нижний информационный блок (название модели и описание с кнопкой Ещё / Свернуть) */}
       <section className="feed-info-block">
         <h2 className="feed-model-title">{camera.model_name}</h2>
         <div className={`feed-summary-row ${expandedDesc ? 'expanded' : ''}`}>
@@ -106,10 +130,14 @@ export const CameraFeedPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Правая панель действий строго по image1.png */}
       <aside className="feed-side-actions">
-        {/* 1. Лайк: Белое сердце + счетчик лайков снизу */}
-        <div className="feed-like-action" onClick={handleLikeToggle} role="button" tabIndex={0}>
+        <div
+          className="feed-like-action"
+          onClick={handleLikeToggle}
+          role="button"
+          tabIndex={0}
+          title={isAuthenticated ? 'Поставить/убрать лайк' : 'Войдите, чтобы поставить лайк'}
+        >
           <div className="feed-like-icon">
             <svg
               width="44"
@@ -127,14 +155,14 @@ export const CameraFeedPage: React.FC = () => {
               />
             </svg>
           </div>
-          <div className="feed-likes-counter">{effectiveLikes}</div>
+          <div className="feed-likes-counter">{camera.likes_count}</div>
         </div>
 
-        {/* 2. Круглая красная кнопка Следующий (#D71820) с белой стрелкой */}
         <Button
           type="button"
           bsPrefix="feed-next-button"
           onClick={handleNextClick}
+          disabled={loading || actionLoading}
           title="Следующая модель камеры"
           aria-label="Следующая модель камеры"
         >
@@ -149,10 +177,13 @@ export const CameraFeedPage: React.FC = () => {
           </svg>
         </Button>
 
-        {/* 3. Овальные бейджи характеристик */}
         <div className="feed-metrics-badges">
-          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">{camera.power.toFixed(1)} Вт</Badge>
-          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">{camera.resolution || 'Full HD'}</Badge>
+          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">
+            {camera.power.toFixed(1)} Вт
+          </Badge>
+          <Badge bsPrefix="feed-metric-badge" bg="light" text="dark">
+            {camera.resolution || 'Full HD'}
+          </Badge>
         </div>
       </aside>
     </div>

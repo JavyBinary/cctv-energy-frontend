@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import { CameraModel } from '../modules/types';
@@ -9,10 +9,22 @@ interface CameraCardProps {
   camera: CameraModel;
   onClick: (id: number) => void;
   onDelete?: (id: number) => void;
+  showDelete?: boolean;
+  disabled?: boolean;
 }
 
-export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelete }) => {
+export const CameraCard: React.FC<CameraCardProps> = ({
+  camera,
+  onClick,
+  onDelete,
+  showDelete = false,
+  disabled = false,
+}) => {
   const [imgSrc, setImgSrc] = useState(camera.image_url || DEFAULT_IMAGE);
+
+  useEffect(() => {
+    setImgSrc(camera.image_url || DEFAULT_IMAGE);
+  }, [camera.image_url]);
 
   const handleImgError = () => {
     if (imgSrc !== DEFAULT_IMAGE) {
@@ -22,7 +34,7 @@ export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelet
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete) {
+    if (onDelete && !disabled) {
       onDelete(camera.id);
     }
   };
@@ -65,16 +77,19 @@ export const CameraCard: React.FC<CameraCardProps> = ({ camera, onClick, onDelet
           </div>
         </div>
       </div>
-      <div className="camera-card-delete-form">
-        <Button
-          type="button"
-          bsPrefix="camera-card-delete-btn"
-          title="Удалить камеру"
-          onClick={handleDelete}
-        >
-          Удалить
-        </Button>
-      </div>
+      {showDelete && (
+        <div className="camera-card-delete-form">
+          <Button
+            type="button"
+            bsPrefix="camera-card-delete-btn"
+            title="Удалить камеру"
+            onClick={handleDelete}
+            disabled={disabled}
+          >
+            Удалить
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };

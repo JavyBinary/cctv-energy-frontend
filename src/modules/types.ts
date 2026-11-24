@@ -8,10 +8,13 @@ export interface CameraModel {
   resolution: string; // Например, 'Full HD', '2K QHD', 'Super HD'
   is_outdoor: boolean; // Уличная или для помещения
   status: CameraStatus;
-  image_url: string; // Относительный путь к изображению или пустая строка для fallback
-  video_url: string; // Относительный путь к видео или пустая строка для fallback
+  image_url: string; // Путь через MinIO proxy (/media/...) или локальный fallback
+  video_url: string; // Путь через MinIO proxy (/media/...) или локальный fallback
   likes_count: number; // Количество лайков
   housing_type?: string; // Купольный / Цилиндрический / Корпусный
+  creator_id?: number;
+  is_creator?: number; // 1 если текущий авторизованный пользователь — создатель
+  is_liked?: number; // 1 если текущий авторизованный пользователь поставил лайк
 }
 
 export interface FilterState {
