@@ -1,38 +1,31 @@
 {
-  "name": "camera-energy-app",
+  "name": "cctv-energy-tauri",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:https": "VITE_HTTPS=true vite",
-    "build": "tsc && vite build",
-    "build:pages": "VITE_MOCK_ONLY=true VITE_BASE_PATH=/cctv-energy-frontend/ npm run build && cp dist/index.html dist/404.html",
-    "predeploy": "npm run build:pages",
-    "deploy": "gh-pages -d dist",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node scripts/test_mock.js",
-    "generate-api": "node scripts/generate-api.mjs"
+    "tauri": "tauri",
+    "tune-search": "node scripts/tune-search.mjs"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.15.0",
-    "axios": "^1.21.1",
+    "@huggingface/transformers": "^3.4.0",
     "bootstrap": "^5.3.3",
     "react": "^18.3.1",
-    "react-bootstrap": "^2.10.4",
+    "react-bootstrap": "^2.10.5",
     "react-dom": "^18.3.1",
-    "react-redux": "^9.3.1",
-    "react-router-dom": "^6.26.2"
+    "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "gh-pages": "^6.3.0",
-    "swagger-typescript-api": "^13.15.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.2",
-    "vite-plugin-mkcert": "^2.1.0",
-    "vite-plugin-pwa": "^2.0.0"
+    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/cli": "^2.2.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
   }
 }

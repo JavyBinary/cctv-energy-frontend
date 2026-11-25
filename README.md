@@ -1,23 +1,37 @@
-# Фронтенд: Расчет энергопотребления видеонаблюдения (Доп. задание: Индексы в БД)
+# CCTV Energy Tauri App — Доп 2 (Нативное приложение с ИИ)
 
-Ветка: `indexes` (репозиторий `cctv-energy-frontend`, от ветки `frontend-pwa`).
+Отдельный репозиторий: **`cctv-energy-tauri`** (ветка `main`).
 
-## Что добавлено в доп. задании
-1. **Пагинация каталога («Плитка»)**:
-   - Перегенерирован OpenAPI-клиент `src/api/Api.ts` под пагинированный ответ `{ total, page, limit, data }`.
-   - Компонент `src/components/Pagination.tsx` на `React-Bootstrap Pagination` с окном из 5 видимых страниц вокруг текущей (`First`, `Prev`, `Ellipsis`, `Next`, `Last`).
-   - В `camerasSlice.ts` хранятся `currentPage`, `limit` (`12`), `total` и фильтр `appliedPower` с синхронизацией URL `?power=...&page=...`.
-   - Над сеткой выводится строка «Найдено моделей: N. Страница P из M.».
-2. **Лента в Redis на 100 случайных неповторяющихся карточек**:
-   - Новый слайс `src/slices/feedBatchSlice.ts` + хранение идентификатора сессии в `sessionStorage` (`src/modules/feedSession.ts`).
-   - Первая порция из 100 карточек загружается из `GET /api/cameras/feed/batch` при запуске приложения в `App.tsx` (и обновляется при входе/выходе).
-   - На странице «Лента» выводится порядковый номер `№ N`. Переход кнопкой «Следующий» по карточкам 1–99 происходит мгновенно в Redux без запросов к серверу; после 100-й карточки запрашивается новая порция (`?refresh=true`) с продолжением нумерации (`101..200`).
+## Что реализовано
+- Нативное приложение на **Tauri 2** для **гостя** (без авторизации, добавления, редактирования и лайков).
+- **2 страницы** (`HashRouter`):
+  1. `/#/` — Список моделей камер: фильтрация по мощности (`power_max`) на бэкенде + поиск похожих моделей по загруженному изображению через `@huggingface/transformers` (модель `Xenova/siglip-base-patch16-224`, квантизация `q8`, `wasm`, Web Worker).
+  2. `/#/cameras/:id` — Подробнее о модели камеры (`model_name`, `power`, `resolution`, `likes_count`, русское `description`, английское `description_en`).
+- Подключение к API (`:8000`) и MinIO (`:9000`) по IP локальной сети (`src/target_config.ts`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/default.json`) через `tauri-plugin-http` и `tauri-plugin-cors-fetch`.
 
-## Команды запуска и проверки
+## Настройка LAN IP
+Узнайте IP ноутбука:
 ```bash
-npm install
-npm run generate-api   # при запущенном indexes-backend на :8000
-npm run dev            # http://localhost:5173
-npm run build
-npm test
+ipconfig getifaddr en0
 ```
+При смене сети замените IP в:
+1. `src/target_config.ts` (`lan_host`)
+2. `src-tauri/tauri.conf.json` (`app.security.csp`)
+3. `src-tauri/capabilities/default.json` (`http:default` -> `allow`)
+
+## Установка и сборка
+```bash
+# Если Rust ещё не установлен на macOS:
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+npm install
+npm run build         # проверка TypeScript + Vite сборки
+npm run tauri dev     # отладочный режим Tauri
+npm run tauri build   # релизная сборка (.app / .dmg в src-tauri/target/release/bundle)
+```
+
+## Поиск исходящего порта Tauri (для диаграммы развёртывания)
+```bash
+sudo tcpdump -i en0 'tcp port 8000' -nn
+```
+Либо в Wireshark на интерфейсе `en0` с фильтром `tcp.port == 8000` (смотреть `Source Port`).
