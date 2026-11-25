@@ -1,16 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useStore } from 'react-redux';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import { CameraCard } from '../components/CameraCard';
+import { Pagination } from '../components/Pagination';
 import { PowerFilter } from '../components/PowerFilter';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import type { RootState } from '../store';
 import {
   DEFAULT_MAX_POWER,
   applyPowerFilter,
   deleteCamera,
   fetchCameras,
   resetPowerFilter,
+  setCurrentPage,
   setSliderPower,
 } from '../slices/camerasSlice';
 import './CameraCatalogPage.css';
@@ -18,27 +22,52 @@ import './CameraCatalogPage.css';
 export const CameraCatalogPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const store = useStore<RootState>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
-  const { cameras, sliderPower, appliedPower, loading, actionLoading } = useAppSelector(
-    (state) => state.cameras
-  );
+  const { cameras, total, currentPage, limit, sliderPower, appliedPower, loading, actionLoading } =
+    useAppSelector((state) => state.cameras);
+
+  const rawPower = searchParams.get('power');
+  const parsedPower = rawPower !== null ? parseFloat(rawPower) : NaN;
+  const urlPower = Number.isFinite(parsedPower) ? parsedPower : DEFAULT_MAX_POWER;
+
+  const rawPage = searchParams.get('page');
+  const parsedPage = rawPage !== null ? parseInt(rawPage, 10) : NaN;
+  const urlPage = Number.isFinite(parsedPage) && parsedPage >= 1 ? parsedPage : 1;
+
+  const isRestoring = useRef(false);
+
+  // Восстановление фильтра и страницы из Redux при возврате из Ленты на чистый /
+  useEffect(() => {
+    const saved = store.getState().cameras;
+    const hasParams = searchParams.has('power') || searchParams.has('page');
+    if (hasParams || (saved.appliedPower === DEFAULT_MAX_POWER && saved.currentPage === 1)) {
+      return;
+    }
+    isRestoring.current = true;
+    const nextParams: Record<string, string> = {};
+    if (saved.appliedPower < DEFAULT_MAX_POWER) {
+      nextParams.power = saved.appliedPower.toFixed(1);
+    }
+    if (saved.currentPage > 1) {
+      nextParams.page = String(saved.currentPage);
+    }
+    setSearchParams(nextParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     document.title = 'Каталог камер - Расчет энергопотребления';
-    const rawPower = searchParams.get('power');
-    if (rawPower !== null) {
-      const parsed = parseFloat(rawPower);
-      if (Number.isFinite(parsed)) {
-        dispatch(applyPowerFilter(parsed));
-        dispatch(fetchCameras(parsed));
-        return;
-      }
+    if (isRestoring.current) {
+      isRestoring.current = false;
+      return;
     }
-    dispatch(fetchCameras());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch]);
+    dispatch(applyPowerFilter(urlPower));
+    dispatch(setCurrentPage(urlPage));
+    dispatch(fetchCameras({ powerMax: urlPower, page: urlPage }));
+  }, [dispatch, urlPower, urlPage, isAuthenticated]);
 
   const handleCardClick = (id: number) => {
     navigate(`/feed/${id}`);
@@ -51,18 +80,30 @@ export const CameraCatalogPage: React.FC = () => {
   const handleSearch = () => {
     dispatch(applyPowerFilter(sliderPower));
     if (sliderPower < DEFAULT_MAX_POWER) {
-      setSearchParams({ power: sliderPower.toFixed(1) });
+      setSearchParams({ power: sliderPower.toFixed(1), page: '1' });
     } else {
       setSearchParams({});
     }
-    dispatch(fetchCameras(sliderPower));
   };
 
   const handleResetFilter = () => {
     dispatch(resetPowerFilter());
     setSearchParams({});
-    dispatch(fetchCameras(DEFAULT_MAX_POWER));
   };
+
+  const handlePageChange = (nextPage: number) => {
+    const nextParams: Record<string, string> = {};
+    if (appliedPower < DEFAULT_MAX_POWER) {
+      nextParams.power = appliedPower.toFixed(1);
+    }
+    if (nextPage > 1) {
+      nextParams.page = String(nextPage);
+    }
+    setSearchParams(nextParams);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div className="camera-catalog-page">
@@ -109,6 +150,16 @@ export const CameraCatalogPage: React.FC = () => {
           ))
         )}
       </main>
+
+      {!loading && totalPages > 1 && (
+        <div className="catalog-pagination-wrap">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -88,6 +88,25 @@ export interface CameraResponse {
   is_liked?: number;
 }
 
+/** FeedBatchItem */
+export interface FeedBatchItem {
+  camera: CameraResponse;
+  /** Position */
+  position: number;
+}
+
+/** FeedBatchResponse */
+export interface FeedBatchResponse {
+  /** Session Id */
+  session_id: string;
+  /** Batch Number */
+  batch_number: number;
+  /** First Position */
+  first_position: number;
+  /** Items */
+  items: FeedBatchItem[];
+}
+
 /** HTTPValidationError */
 export interface HTTPValidationError {
   /** Detail */
@@ -103,6 +122,23 @@ export interface LikeToggleRequest {
    * @max 1
    */
   like: number;
+}
+
+/** PaginatedCamerasResponse */
+export interface PaginatedCamerasResponse {
+  /** Total */
+  total: number;
+  /** Page */
+  page: number;
+  /** Limit */
+  limit: number;
+  /**
+   * Query Ms
+   * @default 0
+   */
+  query_ms?: number;
+  /** Data */
+  data: CameraResponse[];
 }
 
 /** UserLoginRequest */
@@ -363,10 +399,25 @@ export class Api<
          * Фильтрация по максимальной мощности
          */
         power_max?: number | null;
+        /**
+         * Page
+         * Номер страницы каталога
+         * @min 1
+         * @default 1
+         */
+        page?: number;
+        /**
+         * Limit
+         * Количество карточек на странице
+         * @min 1
+         * @max 100
+         * @default 12
+         */
+        limit?: number;
       },
       params: RequestParams = {},
     ) =>
-      this.request<CameraResponse[], HTTPValidationError>({
+      this.request<PaginatedCamerasResponse, HTTPValidationError>({
         path: `/api/cameras`,
         method: "GET",
         query: query,
@@ -391,6 +442,38 @@ export class Api<
         method: "POST",
         body: data,
         type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags cameras
+     * @name GetCameraFeedBatchApiApiCamerasFeedBatchGet
+     * @summary Get Camera Feed Batch Api
+     * @request GET:/api/cameras/feed/batch
+     */
+    getCameraFeedBatchApiApiCamerasFeedBatchGet: (
+      query?: {
+        /**
+         * Session Id
+         * Идентификатор сессии ленты
+         */
+        session_id?: string | null;
+        /**
+         * Refresh
+         * Сформировать следующую порцию из 100 карточек
+         * @default false
+         */
+        refresh?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<FeedBatchResponse, HTTPValidationError>({
+        path: `/api/cameras/feed/batch`,
+        method: "GET",
+        query: query,
         format: "json",
         ...params,
       }),

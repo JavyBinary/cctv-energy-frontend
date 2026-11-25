@@ -6,6 +6,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import { DEFAULT_IMAGE, DEFAULT_VIDEO } from '../modules/mock';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchFeedCamera, toggleLikeCamera } from '../slices/camerasSlice';
+import { fetchFeedBatch } from '../slices/feedBatchSlice';
 import './CameraFeedPage.css';
 
 export const CameraFeedPage: React.FC = () => {
@@ -14,7 +15,8 @@ export const CameraFeedPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
-  const { feedCamera: camera, loading, actionLoading } = useAppSelector((state) => state.cameras);
+  const { feedCamera, loading, actionLoading } = useAppSelector((state) => state.cameras);
+  const batch = useAppSelector((state) => state.feedBatch);
 
   const [expandedDesc, setExpandedDesc] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -22,11 +24,24 @@ export const CameraFeedPage: React.FC = () => {
   const parsedId = id ? parseInt(id, 10) : undefined;
   const validId = parsedId !== undefined && !Number.isNaN(parsedId) ? parsedId : undefined;
 
+  const batchSettled = batch.status === 'ready' || batch.status === 'failed';
+  const batchIndex =
+    batch.status === 'ready' && batch.items.length > 0
+      ? validId === undefined
+        ? 0
+        : batch.items.findIndex((item) => item.camera.id === validId)
+      : -1;
+  const batchItem = batchIndex !== -1 ? batch.items[batchIndex] : null;
+
   useEffect(() => {
     setExpandedDesc(false);
     setVideoError(false);
-    dispatch(fetchFeedCamera({ cameraId: validId, next: false }));
-  }, [validId, dispatch]);
+    if (batchSettled && !batchItem) {
+      dispatch(fetchFeedCamera({ cameraId: validId, next: false }));
+    }
+  }, [validId, dispatch, batchSettled, batchItem === null]);
+
+  const camera = batchItem ? batchItem.camera : feedCamera;
 
   useEffect(() => {
     if (camera) {
@@ -34,7 +49,7 @@ export const CameraFeedPage: React.FC = () => {
     }
   }, [camera]);
 
-  if (loading && !camera) {
+  if ((batch.status === 'loading' || loading) && !camera) {
     return (
       <div className="camera-feed-container">
         <div className="feed-not-found">
@@ -58,15 +73,33 @@ export const CameraFeedPage: React.FC = () => {
   }
 
   const handleNextClick = async () => {
-    if (loading || actionLoading) return;
-    const result = await dispatch(fetchFeedCamera({ cameraId: camera.id, next: true }));
-    if (fetchFeedCamera.fulfilled.match(result) || fetchFeedCamera.rejected.match(result)) {
-      // Переходим по URL при следующем id если он отличается
-      const nextId =
-        fetchFeedCamera.fulfilled.match(result) ? result.payload.id : undefined;
-      if (nextId && nextId !== camera.id) {
-        navigate(`/feed/${nextId}`);
+    if (loading || actionLoading || batch.status === 'loading') return;
+
+    if (batchItem) {
+      const isLastInBatch = batchIndex >= batch.items.length - 1;
+      if (!isLastInBatch) {
+        const nextCam = batch.items[batchIndex + 1].camera;
+        navigate(`/feed/${nextCam.id}`);
+        return;
       }
+      try {
+        const nextBatch = await dispatch(
+          fetchFeedBatch({ refresh: true, authenticated: isAuthenticated })
+        ).unwrap();
+        if (nextBatch.items.length > 0) {
+          navigate(`/feed/${nextBatch.items[0].camera.id}`);
+        } else {
+          navigate('/feed');
+        }
+      } catch {
+        // Ошибка обработана в slice
+      }
+      return;
+    }
+
+    const result = await dispatch(fetchFeedCamera({ cameraId: camera.id, next: true }));
+    if (fetchFeedCamera.fulfilled.match(result) && result.payload.id !== camera.id) {
+      navigate(`/feed/${result.payload.id}`);
     }
   };
 
@@ -86,6 +119,12 @@ export const CameraFeedPage: React.FC = () => {
 
   return (
     <div className="camera-feed-container">
+      {batchItem && (
+        <div className="feed-batch-badge" title={`Порция Redis #${batch.batchNumber}`}>
+          № {batchItem.position}
+        </div>
+      )}
+
       <div className="feed-video-container">
         {!videoError && videoSrc ? (
           <video
@@ -162,7 +201,7 @@ export const CameraFeedPage: React.FC = () => {
           type="button"
           bsPrefix="feed-next-button"
           onClick={handleNextClick}
-          disabled={loading || actionLoading}
+          disabled={loading || actionLoading || batch.status === 'loading'}
           title="Следующая модель камеры"
           aria-label="Следующая модель камеры"
         >

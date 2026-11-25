@@ -57,7 +57,6 @@ export const CameraCard: React.FC<CameraCardProps> = ({
           src={imgSrc}
           alt={camera.model_name}
           onError={handleImgError}
-          loading="lazy"
         />
         <Card.Title bsPrefix="camera-card-title">{camera.model_name}</Card.Title>
         <div className="camera-card-specs">

@@ -28,7 +28,7 @@ export const BottomNavBar: React.FC = () => {
     } finally {
       dispatch(logout());
       navigate('/');
-      dispatch(fetchCameras(DEFAULT_MAX_POWER));
+      dispatch(fetchCameras({ powerMax: DEFAULT_MAX_POWER, page: 1 }));
     }
   };
 

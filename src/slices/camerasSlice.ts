@@ -1,18 +1,24 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../api';
-import { CameraPublishRequest, CameraResponse } from '../api/Api';
-import { CameraModel, CameraStatus } from '../modules/types';
+import { CameraPublishRequest } from '../api/Api';
+import { CameraModel } from '../modules/types';
+import { mapApiCamera } from '../modules/mapCamera';
 import { CAMERAS_MOCK, getCameraById, getNextCameraId, getPublishedCameras } from '../modules/mock';
 import { logout } from './userSlice';
 
 export const DEFAULT_MAX_POWER = 15.0;
+export const PAGE_LIMIT = 12;
 
-const isMockOnlyMode = (): boolean =>
+export const isMockOnlyMode = (): boolean =>
   import.meta.env.VITE_MOCK_ONLY === 'true' ||
   (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io'));
 
 export interface CamerasState {
   cameras: CameraModel[];
+  total: number;
+  currentPage: number;
+  limit: number;
+  queryMs: number | null;
   feedCamera: CameraModel | null;
   draftCamera: CameraModel | null;
   sliderPower: number;
@@ -25,6 +31,10 @@ export interface CamerasState {
 
 const initialState: CamerasState = {
   cameras: [],
+  total: 0,
+  currentPage: 1,
+  limit: PAGE_LIMIT,
+  queryMs: null,
   feedCamera: null,
   draftCamera: null,
   sliderPower: DEFAULT_MAX_POWER,
@@ -35,48 +45,45 @@ const initialState: CamerasState = {
   error: null,
 };
 
-function mapApiCamera(c: CameraResponse): CameraModel {
-  return {
-    id: c.id,
-    model_name: c.model_name,
-    description: c.description ?? '',
-    power: c.power ?? 0,
-    resolution: c.resolution ?? 'Full HD',
-    is_outdoor: false,
-    status: (c.status as CameraStatus) || 'published',
-    image_url: c.image_url ?? '',
-    video_url: c.video_url ?? '',
-    likes_count: c.likes_count ?? 0,
-    creator_id: c.creator_id,
-    is_creator: c.is_creator ?? 0,
-    is_liked: c.is_liked ?? 0,
-  };
-}
-
 export const fetchCameras = createAsyncThunk<
-  CameraModel[],
-  number | undefined,
-  { rejectValue: { isGuest: boolean; powerMax: number; message: string } }
+  { total: number; page: number; limit: number; query_ms: number; data: CameraModel[] },
+  { powerMax?: number; page?: number } | void,
+  { rejectValue: { isGuest: boolean; powerMax: number; page: number; message: string } }
 >(
   'cameras/fetchCameras',
-  async (explicitPower, { getState, rejectWithValue }) => {
+  async (arg, { getState, rejectWithValue }) => {
     const state = getState() as { cameras: CamerasState; user: { isAuthenticated: boolean } };
-    const powerMax = explicitPower !== undefined ? explicitPower : state.cameras.appliedPower;
+    const powerMax =
+      arg && arg.powerMax !== undefined ? arg.powerMax : state.cameras.appliedPower;
+    const page = arg && arg.page !== undefined ? arg.page : state.cameras.currentPage;
+
     if (isMockOnlyMode()) {
       return rejectWithValue({
         isGuest: true,
         powerMax,
+        page,
         message: 'Mock-режим для GitHub Pages',
       });
     }
+
     try {
-      const query = powerMax < DEFAULT_MAX_POWER ? { power_max: powerMax } : undefined;
-      const response = await api.api.getCamerasApiApiCamerasGet(query);
-      return response.data.map(mapApiCamera);
+      const response = await api.api.getCamerasApiApiCamerasGet({
+        power_max: powerMax < DEFAULT_MAX_POWER ? powerMax : undefined,
+        page,
+        limit: state.cameras.limit,
+      });
+      return {
+        total: response.data.total,
+        page: response.data.page,
+        limit: response.data.limit,
+        query_ms: response.data.query_ms ?? 0,
+        data: response.data.data.map(mapApiCamera),
+      };
     } catch {
       return rejectWithValue({
         isGuest: !state.user.isAuthenticated,
         powerMax,
+        page,
         message: 'Сервер недоступен',
       });
     }
@@ -205,14 +212,19 @@ const camerasSlice = createSlice({
     setSliderPower(state, action: PayloadAction<number>) {
       state.sliderPower = action.payload;
     },
+    setCurrentPage(state, action: PayloadAction<number>) {
+      state.currentPage = Math.max(1, action.payload);
+    },
     applyPowerFilter(state, action: PayloadAction<number | undefined>) {
       const val = action.payload !== undefined ? action.payload : state.sliderPower;
       state.sliderPower = val;
       state.appliedPower = val;
+      state.currentPage = 1;
     },
     resetPowerFilter(state) {
       state.sliderPower = DEFAULT_MAX_POWER;
       state.appliedPower = DEFAULT_MAX_POWER;
+      state.currentPage = 1;
     },
     clearCameraError(state) {
       state.error = null;
@@ -227,14 +239,23 @@ const camerasSlice = createSlice({
       .addCase(fetchCameras.fulfilled, (state, action) => {
         state.loading = false;
         state.isMockFallback = false;
-        state.cameras = action.payload;
+        state.cameras = action.payload.data;
+        state.total = action.payload.total;
+        state.currentPage = action.payload.page;
+        state.limit = action.payload.limit;
+        state.queryMs = action.payload.query_ms;
       })
       .addCase(fetchCameras.rejected, (state, action) => {
         state.loading = false;
         const payload = action.payload;
         if (payload?.isGuest) {
           state.isMockFallback = true;
-          state.cameras = getPublishedCameras(payload.powerMax);
+          const filtered = getPublishedCameras(payload.powerMax);
+          const start = (payload.page - 1) * state.limit;
+          state.total = filtered.length;
+          state.currentPage = payload.page;
+          state.queryMs = null;
+          state.cameras = filtered.slice(start, start + state.limit);
           state.error = null;
         } else {
           state.error = payload?.message || 'Ошибка загрузки каталога';
@@ -313,6 +334,7 @@ const camerasSlice = createSlice({
       .addCase(deleteCamera.fulfilled, (state, action) => {
         state.actionLoading = false;
         state.cameras = state.cameras.filter((c) => c.id !== action.payload);
+        state.total = Math.max(0, state.total - 1);
       })
       .addCase(deleteCamera.rejected, (state, action) => {
         state.actionLoading = false;
@@ -333,12 +355,18 @@ const camerasSlice = createSlice({
       .addCase(logout, (state) => {
         state.sliderPower = DEFAULT_MAX_POWER;
         state.appliedPower = DEFAULT_MAX_POWER;
+        state.currentPage = 1;
         state.draftCamera = null;
         state.error = null;
       });
   },
 });
 
-export const { setSliderPower, applyPowerFilter, resetPowerFilter, clearCameraError } =
-  camerasSlice.actions;
+export const {
+  setSliderPower,
+  setCurrentPage,
+  applyPowerFilter,
+  resetPowerFilter,
+  clearCameraError,
+} = camerasSlice.actions;
 export default camerasSlice.reducer;
